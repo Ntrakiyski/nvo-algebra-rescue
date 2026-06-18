@@ -74,9 +74,9 @@
     }
 
     .shell {
-      width: min(1120px, calc(100vw - 28px));
+      width: min(1360px, calc(100vw - 28px));
       margin: 0 auto;
-      padding: 18px 0 28px;
+      padding: 18px 0 86px;
     }
 
     .topbar {
@@ -157,11 +157,8 @@
     }
 
     .layout {
-      display: grid;
-      grid-template-columns: 240px minmax(0, 1fr) 260px;
-      gap: 14px;
+      display: block;
       margin-top: 0;
-      align-items: start;
     }
 
     .rail,
@@ -176,8 +173,18 @@
 
     .rail {
       padding: 12px;
-      position: sticky;
-      top: 12px;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 45;
+      width: min(360px, calc(100vw - 56px));
+      max-width: 88vw;
+      overflow-y: auto;
+      border-radius: 0;
+      padding: max(14px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+      transform: translateX(-104%);
+      transition: transform 180ms ease;
     }
 
     .rail-intro,
@@ -257,16 +264,29 @@
     }
 
     .side-rail {
-      padding: 0;
-      position: sticky;
-      top: 12px;
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 45;
+      width: min(360px, calc(100vw - 56px));
+      max-width: 88vw;
+      overflow-y: auto;
+      padding: max(14px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
       display: grid;
-      gap: 16px;
+      gap: 14px;
       align-content: start;
-      background: transparent;
-      border: 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
       border-radius: 0;
-      box-shadow: none;
+      box-shadow: var(--shadow);
+      transform: translateX(104%);
+      transition: transform 180ms ease;
+    }
+
+    .rail.is-open,
+    .side-rail.is-open {
+      transform: translateX(0);
     }
 
     .side-rail > .score-strip {
@@ -560,7 +580,7 @@
 
     .problem-row {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 270px;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
       gap: 14px;
       align-items: stretch;
     }
@@ -637,6 +657,8 @@
       line-height: 1;
       text-align: center;
       padding: 12px;
+      white-space: nowrap;
+      overflow: hidden;
     }
 
     .visual-panel {
@@ -996,11 +1018,50 @@
     }
 
     .drawer-scrim {
-      display: none;
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      background: rgba(3, 8, 14, 0.42);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+    }
+
+    body.drawer-open .drawer-scrim {
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .mobile-drawer-btn {
-      display: none;
+      position: fixed;
+      bottom: max(14px, env(safe-area-inset-bottom));
+      z-index: 48;
+      width: 52px;
+      height: 52px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+      display: grid;
+      place-items: center;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .mobile-drawer-btn svg {
+      width: 25px;
+      height: 25px;
+      stroke: currentColor;
+    }
+
+    .mobile-drawer-btn.left {
+      left: max(14px, env(safe-area-inset-left));
+    }
+
+    .mobile-drawer-btn.right {
+      right: max(14px, env(safe-area-inset-right));
     }
 
     .spark {
@@ -1066,6 +1127,10 @@
     }
 
     body.visual-help-open {
+      overflow: hidden;
+    }
+
+    body.drawer-open {
       overflow: hidden;
     }
 
@@ -1175,7 +1240,7 @@
       .mobile-drawer-btn {
         position: fixed;
         bottom: max(14px, env(safe-area-inset-bottom));
-        z-index: 39;
+        z-index: 48;
         width: 52px;
         height: 52px;
         border: 1px solid var(--line);
@@ -1964,6 +2029,41 @@
       document.body.classList.remove("visual-help-open");
     }
 
+    function fitExpressionToOneLine() {
+      if (!els.expression || !els.expression.clientWidth) {
+        return;
+      }
+
+      els.expression.style.fontSize = "";
+      const style = getComputedStyle(els.expression);
+      const maxFontSize = parseFloat(style.fontSize) || 64;
+      const minFontSize = window.innerWidth <= 560 ? 18 : 28;
+      const horizontalPadding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const availableWidth = els.expression.clientWidth - horizontalPadding - 8;
+      const canvas = fitExpressionToOneLine.canvas || document.createElement("canvas");
+      fitExpressionToOneLine.canvas = canvas;
+      let context = null;
+
+      try {
+        context = canvas.getContext && canvas.getContext("2d");
+      } catch (error) {
+        context = null;
+      }
+
+      if (!context || availableWidth <= 0) {
+        return;
+      }
+
+      context.font = `${style.fontWeight} ${maxFontSize}px ${style.fontFamily}`;
+      const textWidth = context.measureText(els.expression.textContent).width;
+      if (textWidth <= availableWidth) {
+        return;
+      }
+
+      const fittedSize = Math.max(minFontSize, Math.floor(maxFontSize * (availableWidth / textWidth)));
+      els.expression.style.fontSize = `${fittedSize}px`;
+    }
+
     function closeDrawers() {
       els.leftRail.classList.remove("is-open");
       els.rightRail.classList.remove("is-open");
@@ -1974,6 +2074,11 @@
 
     function openDrawer(side) {
       const isLeft = side === "left";
+      const target = isLeft ? els.leftRail : els.rightRail;
+      if (target.classList.contains("is-open")) {
+        closeDrawers();
+        return;
+      }
       els.leftRail.classList.toggle("is-open", isLeft);
       els.rightRail.classList.toggle("is-open", !isLeft);
       document.body.classList.add("drawer-open");
@@ -2026,6 +2131,8 @@
       els.microLabel.textContent = problem.label;
       els.prompt.textContent = problem.prompt;
       els.expression.textContent = problem.expression;
+      fitExpressionToOneLine();
+      requestAnimationFrame(fitExpressionToOneLine);
       els.teacherNote.innerHTML = `<strong>Правило:</strong> ${module.teacher}`;
       els.nextBtn.classList.add("hidden");
       updateRankPanel();
@@ -2510,6 +2617,7 @@
     els.openLeftRail.addEventListener("click", () => openDrawer("left"));
     els.openRightRail.addEventListener("click", () => openDrawer("right"));
     els.drawerScrim.addEventListener("click", closeDrawers);
+    window.addEventListener("resize", () => requestAnimationFrame(fitExpressionToOneLine));
     els.visualOverlayClose.addEventListener("click", closeVisualHelp);
     els.visualOverlay.addEventListener("click", (event) => {
       if (event.target === els.visualOverlay) {
