@@ -1035,7 +1035,8 @@
 
     .mobile-drawer-btn {
       position: fixed;
-      bottom: max(14px, env(safe-area-inset-bottom));
+      top: 28px;
+      bottom: auto;
       z-index: 48;
       width: 52px;
       height: 52px;
@@ -1057,11 +1058,11 @@
     }
 
     .mobile-drawer-btn.left {
-      left: max(14px, env(safe-area-inset-left));
+      left: max(18px, calc((100vw - 1360px) / 2 - 76px));
     }
 
     .mobile-drawer-btn.right {
-      right: max(14px, env(safe-area-inset-right));
+      right: max(18px, calc((100vw - 1360px) / 2 - 76px));
     }
 
     .spark {
@@ -1239,6 +1240,7 @@
 
       .mobile-drawer-btn {
         position: fixed;
+        top: auto;
         bottom: max(14px, env(safe-area-inset-bottom));
         z-index: 48;
         width: 52px;
@@ -1261,10 +1263,12 @@
 
       .mobile-drawer-btn.left {
         left: max(14px, env(safe-area-inset-left));
+        right: auto;
       }
 
       .mobile-drawer-btn.right {
         right: max(14px, env(safe-area-inset-right));
+        left: auto;
       }
     }
 
