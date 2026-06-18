@@ -127,7 +127,7 @@
       display: grid;
       grid-template-columns: 240px minmax(0, 1fr) 260px;
       gap: 14px;
-      margin-top: 18px;
+      margin-top: 0;
       align-items: start;
     }
 
@@ -145,6 +145,52 @@
       padding: 12px;
       position: sticky;
       top: 12px;
+    }
+
+    .rail-intro,
+    .rail-mission {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--soft);
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .rail-intro {
+      display: grid;
+      gap: 6px;
+      background:
+        linear-gradient(135deg, rgba(15, 139, 141, 0.1), rgba(240, 180, 41, 0.09)),
+        var(--soft);
+    }
+
+    .rail-intro h1 {
+      font-size: 1.35rem;
+      line-height: 1.05;
+    }
+
+    .rail-intro .subline {
+      margin-top: 0;
+      font-size: 0.88rem;
+      line-height: 1.35;
+    }
+
+    .rail-mission {
+      display: grid;
+      gap: 10px;
+      background: var(--mission-bg);
+    }
+
+    .rail-mission .mission-title {
+      font-size: 0.98rem;
+    }
+
+    .rail-mission .mission-copy {
+      font-size: 0.9rem;
+    }
+
+    .rail-mission .meter {
+      width: 100%;
     }
 
     .side-rail {
@@ -196,7 +242,9 @@
 
     .module-button:focus-visible,
     .answer:focus-visible,
-    .small-action:focus-visible {
+    .small-action:focus-visible,
+    .visual-help-btn:focus-visible,
+    .visual-overlay-close:focus-visible {
       outline: 3px solid rgba(15, 139, 141, 0.34);
       outline-offset: 2px;
     }
@@ -427,11 +475,38 @@
       padding: 18px;
     }
 
+    .problem-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-width: 0;
+    }
+
     .micro-label {
       color: var(--muted);
       font-size: 0.9rem;
       font-weight: 700;
       text-transform: uppercase;
+    }
+
+    .visual-help-btn {
+      display: none;
+      min-height: 30px;
+      border: 1px solid rgba(15, 139, 141, 0.36);
+      border-radius: 999px;
+      background: rgba(15, 139, 141, 0.08);
+      color: var(--teal);
+      cursor: pointer;
+      font-size: 0.74rem;
+      font-weight: 950;
+      padding: 5px 9px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .visual-help-btn:hover {
+      background: rgba(15, 139, 141, 0.14);
     }
 
     .prompt {
@@ -686,6 +761,59 @@
       font-size: 1.1rem;
     }
 
+    .visual-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 49;
+      background: var(--overlay);
+      padding: 18px;
+      place-items: center;
+    }
+
+    .visual-overlay.is-open {
+      display: grid;
+    }
+
+    .visual-overlay-card {
+      width: min(420px, 100%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .visual-overlay-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .visual-overlay-close {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: var(--soft);
+      color: var(--ink);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 1.25rem;
+      font-weight: 900;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .visual-overlay-card .visual-stage {
+      min-height: 190px;
+    }
+
     .story-overlay {
       position: fixed;
       inset: 0;
@@ -828,6 +956,10 @@
       scroll-behavior: auto !important;
     }
 
+    body.visual-help-open {
+      overflow: hidden;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       * {
         animation: none !important;
@@ -837,10 +969,8 @@
     }
 
     @media (max-width: 860px) {
-      .topbar,
       .layout,
-      .problem-row,
-      .mission {
+      .problem-row {
         grid-template-columns: 1fr;
       }
 
@@ -905,6 +1035,16 @@
 
       .settings {
         grid-template-columns: 1fr;
+      }
+
+      .problem-row > .visual-panel {
+        display: none;
+      }
+
+      .visual-help-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .drawer-scrim {
@@ -1021,16 +1161,38 @@
     </svg>
   </button>
 
-  <div class="shell">
-    <header class="topbar">
-      <div>
-        <h1>НВО 7. клас: алгебра спасител</h1>
-        <div class="subline">Един малък ход. Много повторения. Без бързане.</div>
+  <div class="visual-overlay" id="visualOverlay" role="dialog" aria-modal="true" aria-labelledby="visualOverlayTitle">
+    <section class="visual-overlay-card">
+      <div class="visual-overlay-head">
+        <div class="visual-title" id="visualOverlayTitle">виж го</div>
+        <button class="visual-overlay-close" id="visualOverlayClose" type="button" aria-label="Затвори помощта">×</button>
       </div>
-    </header>
+      <div class="visual-stage" id="visualOverlayStage"></div>
+    </section>
+  </div>
 
+  <div class="shell">
     <div class="layout">
       <aside class="rail" id="leftRail" aria-label="Уроци">
+        <section class="rail-intro" aria-label="Въведение">
+          <h1>НВО 7. клас: алгебра спасител</h1>
+          <div class="subline">Един малък ход. Много повторения. Без бързане.</div>
+        </section>
+        <section class="rail-mission" aria-label="Текуща мисия">
+          <div>
+            <p class="mission-title" id="missionTitle">Мисия: спаси минуса</p>
+            <p class="mission-copy" id="missionCopy">Минусът не е украса. Той пътува заедно с числото.</p>
+          </div>
+          <div class="meter" aria-label="Напредък">
+            <div class="meter-label">
+              <span>модул</span>
+              <span id="progressText">0%</span>
+            </div>
+            <div class="meter-track">
+              <div class="meter-fill" id="progressFill"></div>
+            </div>
+          </div>
+        </section>
         <nav class="module-list" id="moduleList"></nav>
         <div class="settings">
           <div class="theme-row">
@@ -1054,26 +1216,13 @@
       </aside>
 
       <main class="main">
-        <section class="mission">
-          <div>
-            <p class="mission-title" id="missionTitle">Мисия: спаси минуса</p>
-            <p class="mission-copy" id="missionCopy">Минусът не е украса. Той пътува заедно с числото.</p>
-          </div>
-          <div class="meter" aria-label="Напредък">
-            <div class="meter-label">
-              <span>модул</span>
-              <span id="progressText">0%</span>
-            </div>
-            <div class="meter-track">
-              <div class="meter-fill" id="progressFill"></div>
-            </div>
-          </div>
-        </section>
-
         <section class="work" id="workArea">
           <div class="problem-row">
             <div class="problem-panel">
-              <div class="micro-label" id="microLabel">ход 1</div>
+              <div class="problem-head">
+                <div class="micro-label" id="microLabel">ход 1</div>
+                <button class="visual-help-btn" id="visualHelpBtn" type="button">ПОМОЩ</button>
+              </div>
               <div class="prompt" id="prompt">Кое е вярно?</div>
               <div class="expression" id="expression">4 · (-3x)</div>
             </div>
@@ -1535,7 +1684,11 @@
       microLabel: document.getElementById("microLabel"),
       prompt: document.getElementById("prompt"),
       expression: document.getElementById("expression"),
+      visualHelpBtn: document.getElementById("visualHelpBtn"),
       visualStage: document.getElementById("visualStage"),
+      visualOverlay: document.getElementById("visualOverlay"),
+      visualOverlayStage: document.getElementById("visualOverlayStage"),
+      visualOverlayClose: document.getElementById("visualOverlayClose"),
       answers: document.getElementById("answers"),
       feedback: document.getElementById("feedback"),
       nextBtn: document.getElementById("nextBtn"),
@@ -1682,6 +1835,24 @@
       els.storyOverlay.classList.remove("hidden");
     }
 
+    function syncVisualOverlay() {
+      if (els.visualOverlayStage && els.visualStage) {
+        els.visualOverlayStage.innerHTML = els.visualStage.innerHTML;
+      }
+    }
+
+    function openVisualHelp() {
+      syncVisualOverlay();
+      els.visualOverlay.classList.add("is-open");
+      document.body.classList.add("visual-help-open");
+      els.visualOverlayClose.focus();
+    }
+
+    function closeVisualHelp() {
+      els.visualOverlay.classList.remove("is-open");
+      document.body.classList.remove("visual-help-open");
+    }
+
     function closeDrawers() {
       els.leftRail.classList.remove("is-open");
       els.rightRail.classList.remove("is-open");
@@ -1748,6 +1919,8 @@
       updateRankPanel();
       renderExamples(problem);
       renderVisual(problem.visual);
+      syncVisualOverlay();
+      closeVisualHelp();
       renderAnswers(problem);
       if (state.currentSolved) {
         showSolvedState(problem);
@@ -2044,6 +2217,10 @@
       state.completed = true;
       saveProgress();
       renderModules();
+      closeVisualHelp();
+      if (els.visualOverlayStage) {
+        els.visualOverlayStage.innerHTML = "";
+      }
       els.progressText.textContent = "100%";
       els.progressFill.style.width = "100%";
       els.missionTitle.textContent = "Готово за този кръг";
@@ -2102,7 +2279,10 @@
       els.workArea.innerHTML = `
         <div class="problem-row">
           <div class="problem-panel">
-            <div class="micro-label" id="microLabel">ход 1</div>
+            <div class="problem-head">
+              <div class="micro-label" id="microLabel">ход 1</div>
+              <button class="visual-help-btn" id="visualHelpBtn" type="button">ПОМОЩ</button>
+            </div>
             <div class="prompt" id="prompt">Кое е вярно?</div>
             <div class="expression" id="expression">4 · (-3x)</div>
           </div>
@@ -2135,6 +2315,7 @@
       els.microLabel = document.getElementById("microLabel");
       els.prompt = document.getElementById("prompt");
       els.expression = document.getElementById("expression");
+      els.visualHelpBtn = document.getElementById("visualHelpBtn");
       els.visualStage = document.getElementById("visualStage");
       els.answers = document.getElementById("answers");
       els.feedback = document.getElementById("feedback");
@@ -2148,6 +2329,9 @@
 
     function bindDynamicButtons() {
       els.nextBtn.addEventListener("click", nextProblem);
+      if (els.visualHelpBtn) {
+        els.visualHelpBtn.addEventListener("click", openVisualHelp);
+      }
       els.explainBtn.addEventListener("click", () => {
         const problem = getCurrentProblem();
         showFeedback("Подсказка.", problem.hint, "");
@@ -2214,12 +2398,22 @@
     els.openLeftRail.addEventListener("click", () => openDrawer("left"));
     els.openRightRail.addEventListener("click", () => openDrawer("right"));
     els.drawerScrim.addEventListener("click", closeDrawers);
+    els.visualOverlayClose.addEventListener("click", closeVisualHelp);
+    els.visualOverlay.addEventListener("click", (event) => {
+      if (event.target === els.visualOverlay) {
+        closeVisualHelp();
+      }
+    });
 
     document.addEventListener("keydown", (event) => {
       if (!els.storyOverlay.classList.contains("hidden")) {
         if (event.key === "Escape" || event.key === "Enter") {
           closeStory();
         }
+        return;
+      }
+      if (event.key === "Escape" && els.visualOverlay.classList.contains("is-open")) {
+        closeVisualHelp();
         return;
       }
       if (event.key === "Escape" && document.body.classList.contains("drawer-open")) {
