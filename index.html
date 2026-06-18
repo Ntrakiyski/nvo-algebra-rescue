@@ -1049,7 +1049,7 @@
             кратък звук при вярно
           </label>
           <button class="small-action secondary story-replay" id="storyReplayBtn" type="button">история</button>
-          <button class="small-action secondary" id="resetBtn" type="button">нулирай</button>
+          <button class="small-action secondary" id="resetBtn" type="button">нулирай прогреса</button>
         </div>
       </aside>
 
@@ -1507,6 +1507,8 @@
       { name: "НВО алгебра герой", level: 5, min: 230, next: Infinity, skill: "сила: взима лесните точки" }
     ];
 
+    const PROGRESS_STORAGE_KEY = "nvo-algebra-rescue-progress-v1";
+
     const state = {
       moduleIndex: 0,
       problemIndex: 0,
@@ -1516,6 +1518,8 @@
       attempts: 0,
       finished: new Set(),
       mistakes: [],
+      currentSolved: false,
+      completed: false,
       sound: false
     };
 
@@ -1584,6 +1588,84 @@
       }
     }
 
+    function safeStorageRemove(key) {
+      try {
+        localStorage.removeItem(key);
+      } catch (error) {
+        // File previews can block storage; the app still works without it.
+      }
+    }
+
+    function clampInteger(value, min, max) {
+      const number = Number(value);
+      if (!Number.isInteger(number)) {
+        return min;
+      }
+      return Math.min(max, Math.max(min, number));
+    }
+
+    function serializeProgress() {
+      return {
+        version: 1,
+        moduleIndex: state.moduleIndex,
+        problemIndex: state.problemIndex,
+        points: state.points,
+        streak: state.streak,
+        correct: state.correct,
+        attempts: state.attempts,
+        finished: [...state.finished],
+        mistakes: state.mistakes.slice(-40),
+        currentSolved: state.currentSolved,
+        completed: state.completed,
+        savedAt: new Date().toISOString()
+      };
+    }
+
+    function saveProgress() {
+      safeStorageSet(PROGRESS_STORAGE_KEY, JSON.stringify(serializeProgress()));
+    }
+
+    function clearSavedProgress() {
+      safeStorageRemove(PROGRESS_STORAGE_KEY);
+    }
+
+    function restoreSavedProgress() {
+      const raw = safeStorageGet(PROGRESS_STORAGE_KEY);
+      if (!raw) {
+        return false;
+      }
+
+      try {
+        const data = JSON.parse(raw);
+        if (!data || data.version !== 1) {
+          return false;
+        }
+
+        const moduleIndex = clampInteger(data.moduleIndex, 0, modules.length - 1);
+        const maxProblemIndex = Math.max(0, modules[moduleIndex].problems.length - 1);
+        state.moduleIndex = moduleIndex;
+        state.problemIndex = clampInteger(data.problemIndex, 0, maxProblemIndex);
+        state.points = clampInteger(data.points, 0, 99999);
+        state.streak = clampInteger(data.streak, 0, 99999);
+        state.correct = clampInteger(data.correct, 0, 99999);
+        state.attempts = clampInteger(data.attempts, 0, 99);
+        state.finished = new Set(
+          Array.isArray(data.finished)
+            ? data.finished.filter((id) => modules.some((module) => module.id === id))
+            : []
+        );
+        state.mistakes = Array.isArray(data.mistakes)
+          ? data.mistakes.slice(-40).filter((item) => item && item.expression && item.picked && item.correct)
+          : [];
+        state.currentSolved = Boolean(data.currentSolved);
+        state.completed = Boolean(data.completed);
+        return true;
+      } catch (error) {
+        clearSavedProgress();
+        return false;
+      }
+    }
+
     function applyTheme(theme) {
       const nextTheme = theme === "dark" ? "dark" : "light";
       document.body.dataset.theme = nextTheme;
@@ -1635,6 +1717,9 @@
           state.moduleIndex = index;
           state.problemIndex = 0;
           state.attempts = 0;
+          state.currentSolved = false;
+          state.completed = false;
+          saveProgress();
           closeDrawers();
           render();
         });
@@ -1652,9 +1737,9 @@
       els.missionCopy.textContent = module.copy;
       els.progressText.textContent = `${progress}%`;
       els.progressFill.style.width = `${progress}%`;
-      els.points.textContent = state.points;
-      els.streak.textContent = state.streak;
-      els.correctCount.textContent = state.correct;
+      els.points.textContent = String(state.points);
+      els.streak.textContent = String(state.streak);
+      els.correctCount.textContent = String(state.correct);
       els.microLabel.textContent = problem.label;
       els.prompt.textContent = problem.prompt;
       els.expression.textContent = problem.expression;
@@ -1664,7 +1749,11 @@
       renderExamples(problem);
       renderVisual(problem.visual);
       renderAnswers(problem);
-      showFeedback("Избери отговор.", "Ако сбъркаш, задачата остава. Поправяме същия капан веднага.", "");
+      if (state.currentSolved) {
+        showSolvedState(problem);
+      } else {
+        showFeedback("Избери отговор.", "Ако сбъркаш, задачата остава. Поправяме същия капан веднага.", "");
+      }
     }
 
     function escapeHtml(value) {
@@ -1720,6 +1809,16 @@
     function getWrongFeedback(problem, picked) {
       return wrongFeedback[problem.expression]?.[picked]
         || `${problem.hint} Избраният отговор показва същия капан: провери знака, действието и дали има x · x.`;
+    }
+
+    function showSolvedState(problem) {
+      const buttons = [...els.answers.querySelectorAll(".answer")];
+      buttons.forEach((item) => {
+        item.disabled = true;
+        item.classList.toggle("correct", item.dataset.answer === problem.correct);
+      });
+      showFeedback("Запазено вярно.", `${problem.hint} Натисни следващия малък ход.`, "good");
+      els.nextBtn.classList.remove("hidden");
     }
 
     function renderAnswers(problem) {
@@ -1875,12 +1974,15 @@
         state.streak += 1;
         state.correct += 1;
         state.attempts = 0;
+        state.currentSolved = true;
+        state.completed = false;
         showFeedback("Вярно. Задръж това.", `${problem.hint} Получаваш ${earned} точки.`, "good");
-        els.points.textContent = state.points;
-        els.streak.textContent = state.streak;
-        els.correctCount.textContent = state.correct;
+        els.points.textContent = String(state.points);
+        els.streak.textContent = String(state.streak);
+        els.correctCount.textContent = String(state.correct);
         updateRankPanel();
         els.nextBtn.classList.remove("hidden");
+        saveProgress();
         playSuccess();
         burst(button);
       } else {
@@ -1888,13 +1990,16 @@
         button.classList.add("wrong");
         state.streak = 0;
         state.attempts += 1;
+        state.currentSolved = false;
+        state.completed = false;
         state.mistakes.push({
           expression: problem.expression,
           picked,
           correct: problem.correct
         });
         showFeedback("Стоп. Това точно казва грешката.", getWrongFeedback(problem, picked), "bad");
-        els.streak.textContent = state.streak;
+        els.streak.textContent = String(state.streak);
+        saveProgress();
       }
     }
 
@@ -1912,23 +2017,32 @@
     function nextProblem() {
       const module = getCurrentModule();
       state.problemIndex += 1;
+      state.currentSolved = false;
 
       if (state.problemIndex >= module.problems.length) {
         state.finished.add(module.id);
         if (state.moduleIndex < modules.length - 1) {
           state.moduleIndex += 1;
           state.problemIndex = 0;
+          state.completed = false;
+          saveProgress();
           render();
         } else {
+          state.completed = true;
+          saveProgress();
           renderFinish();
         }
         return;
       }
 
+      state.completed = false;
+      saveProgress();
       render();
     }
 
     function renderFinish() {
+      state.completed = true;
+      saveProgress();
       renderModules();
       els.progressText.textContent = "100%";
       els.progressFill.style.width = "100%";
@@ -1961,6 +2075,9 @@
       state.moduleIndex = index;
       state.problemIndex = 0;
       state.attempts = 0;
+      state.currentSolved = false;
+      state.completed = false;
+      saveProgress();
       restoreWorkArea();
       render();
     }
@@ -1974,6 +2091,9 @@
       state.attempts = 0;
       state.finished = new Set();
       state.mistakes = [];
+      state.currentSolved = false;
+      state.completed = false;
+      clearSavedProgress();
       restoreWorkArea();
       render();
     }
@@ -2123,7 +2243,12 @@
       els.storyOverlay.classList.add("hidden");
     }
     bindDynamicButtons();
-    render();
+    const hasSavedProgress = restoreSavedProgress();
+    if (hasSavedProgress && state.completed) {
+      renderFinish();
+    } else {
+      render();
+    }
   </script>
 </body>
 </html>
