@@ -25,6 +25,8 @@
       --mission-bg: linear-gradient(90deg, rgba(15, 139, 141, 0.11), rgba(240, 180, 41, 0.12));
       --rank-bg: linear-gradient(180deg, rgba(15, 139, 141, 0.1), rgba(45, 101, 179, 0.08));
       --overlay: rgba(10, 16, 22, 0.58);
+      --sticker-bg: rgba(255, 255, 255, 0.72);
+      --sticker-shadow: 0 8px 18px rgba(23, 33, 43, 0.12);
     }
 
     body[data-theme="dark"] {
@@ -45,6 +47,8 @@
       --mission-bg: linear-gradient(90deg, rgba(57, 198, 200, 0.14), rgba(255, 211, 106, 0.1));
       --rank-bg: linear-gradient(180deg, rgba(57, 198, 200, 0.14), rgba(183, 156, 255, 0.11));
       --overlay: rgba(1, 5, 10, 0.76);
+      --sticker-bg: rgba(244, 247, 251, 0.12);
+      --sticker-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
     }
 
     * {
@@ -104,12 +108,41 @@
     }
 
     .score-box {
+      position: relative;
+      overflow: hidden;
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 8px 10px;
       text-align: center;
       box-shadow: 0 8px 18px rgba(23, 33, 43, 0.06);
+    }
+
+    .score-box::before {
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--sticker-bg);
+      box-shadow: var(--sticker-shadow);
+      font-size: 0.82rem;
+      line-height: 1;
+    }
+
+    .score-box:nth-child(1)::before {
+      content: "💎";
+    }
+
+    .score-box:nth-child(2)::before {
+      content: "🔥";
+    }
+
+    .score-box:nth-child(3)::before {
+      content: "🎯";
     }
 
     .score-label {
@@ -154,14 +187,39 @@
       background: var(--soft);
       padding: 12px;
       margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
     }
 
     .rail-intro {
       display: grid;
       gap: 6px;
       background:
-        linear-gradient(135deg, rgba(15, 139, 141, 0.1), rgba(240, 180, 41, 0.09)),
+        linear-gradient(135deg, rgba(217, 79, 48, 0.1), rgba(15, 139, 141, 0.11), rgba(240, 180, 41, 0.1)),
         var(--soft);
+      padding-right: 46px;
+    }
+
+    .rail-intro::after,
+    .rail-mission::after,
+    .rank-card::after {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--sticker-bg);
+      box-shadow: var(--sticker-shadow);
+      font-size: 1rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .rail-intro::after {
+      content: "🐉";
     }
 
     .rail-intro h1 {
@@ -179,6 +237,11 @@
       display: grid;
       gap: 10px;
       background: var(--mission-bg);
+      padding-right: 46px;
+    }
+
+    .rail-mission::after {
+      content: "🐋";
     }
 
     .rail-mission .mission-title {
@@ -227,17 +290,45 @@
       color: var(--ink);
       cursor: pointer;
       display: grid;
-      grid-template-columns: 28px 1fr;
+      grid-template-columns: 28px 1fr auto;
       gap: 8px;
       align-items: center;
       text-align: left;
       padding: 8px 10px;
     }
 
+    .module-button.module-theme-0 {
+      background: linear-gradient(90deg, rgba(217, 79, 48, 0.09), var(--soft));
+    }
+
+    .module-button.module-theme-1 {
+      background: linear-gradient(90deg, rgba(45, 101, 179, 0.09), var(--soft));
+    }
+
+    .module-button.module-theme-2 {
+      background: linear-gradient(90deg, rgba(240, 180, 41, 0.12), var(--soft));
+    }
+
+    .module-button.module-theme-3 {
+      background: linear-gradient(90deg, rgba(124, 92, 191, 0.1), var(--soft));
+    }
+
     .module-button[aria-current="true"] {
       border-color: var(--teal);
       background: rgba(15, 139, 141, 0.11);
       box-shadow: inset 4px 0 0 var(--teal);
+    }
+
+    .module-sticker {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      background: var(--sticker-bg);
+      box-shadow: var(--sticker-shadow);
+      font-size: 1rem;
+      line-height: 1;
     }
 
     .module-button:focus-visible,
@@ -278,11 +369,17 @@
     .rank-card {
       border: 1px solid rgba(15, 139, 141, 0.28);
       border-radius: var(--radius);
-      padding: 12px;
+      padding: 12px 48px 12px 12px;
       background: var(--rank-bg);
       display: grid;
       gap: 8px;
       box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .rank-card::after {
+      content: "🏰";
     }
 
     .rank-kicker {
@@ -290,6 +387,10 @@
       font-size: 0.78rem;
       font-weight: 850;
       text-transform: uppercase;
+    }
+
+    .rank-kicker::before {
+      content: "🛡️ ";
     }
 
     .rank-name {
@@ -333,6 +434,14 @@
       gap: 8px;
       color: var(--muted);
       font-size: 0.9rem;
+    }
+
+    .settings::before {
+      content: "малки настройки ✨";
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 900;
+      text-transform: uppercase;
     }
 
     .toggle-line {
@@ -1132,9 +1241,9 @@
   <div class="story-overlay" id="storyOverlay" role="dialog" aria-modal="true" aria-labelledby="storyTitle">
     <section class="story-card">
       <div class="story-badges" aria-label="Съюзници">
-        <span class="story-badge">драконов страж</span>
-        <span class="story-badge">орка от ледено море</span>
-        <span class="story-badge">северна крепост</span>
+        <span class="story-badge">🐉 драконов страж</span>
+        <span class="story-badge">🐋 орка от ледено море</span>
+        <span class="story-badge">🏰 северна крепост</span>
       </div>
       <h2 id="storyTitle">Голямата битка не е изпитът.</h2>
       <p>Изпитът е само портата. Истинската мисия е да събереш достатъчно малки алгебрични победи, за да отключиш следващата сцена.</p>
@@ -1196,7 +1305,7 @@
         <nav class="module-list" id="moduleList"></nav>
         <div class="settings">
           <div class="theme-row">
-            <span>светло / тъмно</span>
+            <span>🌗 светло / тъмно</span>
             <label class="switch" aria-label="Превключи тъмна тема">
               <input type="checkbox" id="themeMode">
               <span class="switch-knob"></span>
@@ -1204,14 +1313,14 @@
           </div>
           <label class="toggle-line">
             <input type="checkbox" id="calmMode">
-            спокоен режим
+            🧊 спокоен режим
           </label>
           <label class="toggle-line">
             <input type="checkbox" id="soundMode">
-            кратък звук при вярно
+            🔔 кратък звук при вярно
           </label>
-          <button class="small-action secondary story-replay" id="storyReplayBtn" type="button">история</button>
-          <button class="small-action secondary" id="resetBtn" type="button">нулирай прогреса</button>
+          <button class="small-action secondary story-replay" id="storyReplayBtn" type="button">📜 история</button>
+          <button class="small-action secondary" id="resetBtn" type="button">↺ нулирай прогреса</button>
         </div>
       </aside>
 
@@ -1656,6 +1765,8 @@
       { name: "НВО алгебра герой", level: 5, min: 230, next: Infinity, skill: "сила: взима лесните точки" }
     ];
 
+    const moduleStickers = ["🐉", "🧩", "⚔️", "🗝️"];
+
     const PROGRESS_STORAGE_KEY = "nvo-algebra-rescue-progress-v1";
 
     const state = {
@@ -1875,7 +1986,7 @@
       modules.forEach((module, index) => {
         const button = document.createElement("button");
         button.type = "button";
-        button.className = "module-button" + (state.finished.has(module.id) ? " done" : "");
+        button.className = `module-button module-theme-${index % 4}` + (state.finished.has(module.id) ? " done" : "");
         button.setAttribute("aria-current", index === state.moduleIndex ? "true" : "false");
         button.innerHTML = `
           <span class="module-mark">${state.finished.has(module.id) ? "✓" : index + 1}</span>
@@ -1883,6 +1994,7 @@
             <span class="module-title">${module.title}</span>
             <span class="module-note">${module.note}</span>
           </span>
+          <span class="module-sticker" aria-hidden="true">${moduleStickers[index] || "✨"}</span>
         `;
         button.addEventListener("click", () => {
           state.moduleIndex = index;
